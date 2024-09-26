@@ -1,0 +1,6 @@
+{
+    "watch": ["."],
+    "exec": "npx tsc && node dist/index.js",
+    "ext": "ts",
+    "ignore": ["node_modules/**/*", "dist/**/*"]
+  }

@@ -29,39 +29,18 @@ export class PostsController {
     const router = Router();
     router.get(PostsController.PATH, PostsController.getAll);
     router.get(`${PostsController.PATH}/:postId`, PostsController.getPostById);
-    router.get(
-      `${PostsController.PATH}/user/:username`,
-      PostsController.getPostsByUsername
-    );
-    router.get(
-      `${PostsController.PATH}/user/:username/votes`,
-      PostsController.getUserVotedPosts
-    );
+    router.get(`${PostsController.PATH}/user/:username`, PostsController.getPostsByUsername);
+    router.get(`${PostsController.PATH}/user/:username/votes`, PostsController.getUserVotedPosts);
 
     router.post(PostsController.PATH, PostsController.createPost);
-    router.post(
-      `${PostsController.PATH}/:postId/upvote`,
-      PostsController.upvotePost
-    );
-    router.post(
-      `${PostsController.PATH}/:postId/removeUpvote`,
-      PostsController.removePostUpvote
-    );
-    router.post(
-      `${PostsController.PATH}/:postId/downvote`,
-      PostsController.downvotePost
-    );
-    router.post(
-      `${PostsController.PATH}/:postId/removeDownvote`,
-      PostsController.removePostDownvote
-    );
+    router.post(`${PostsController.PATH}/:postId/upvote`, PostsController.upvotePost);
+    router.post(`${PostsController.PATH}/:postId/removeUpvote`, PostsController.removePostUpvote);
+    router.post(`${PostsController.PATH}/:postId/downvote`, PostsController.downvotePost);
+    router.post(`${PostsController.PATH}/:postId/removeDownvote`, PostsController.removePostDownvote);
 
     router.put(`${PostsController.PATH}/:postId`, PostsController.updatePost);
 
-    router.delete(
-      `${PostsController.PATH}/:postId`,
-      PostsController.deletePostById
-    );
+    router.delete(`${PostsController.PATH}/:postId`, PostsController.deletePostById);
 
     return router;
   }
@@ -70,7 +49,7 @@ export class PostsController {
     try {
       const postsSnapshot = await getDocs(
         collection(PostsController.db, PostsController.collectionPath)
-      );
+        );
 
       const postList = await Promise.all(
         postsSnapshot.docs.map(async (postDoc) => {
@@ -81,10 +60,7 @@ export class PostsController {
           let comments: IComment[] = [];
 
           if (commentIds.length > 0) {
-            const commentsRef = collection(
-              PostsController.db,
-              PostsController.commentsCollectionPath
-            );
+            const commentsRef = collection(PostsController.db, PostsController.commentsCollectionPath);
             const commentsQuery = query(
               commentsRef,
               where("__name__", "in", commentIds)
@@ -114,7 +90,10 @@ export class PostsController {
         data: postList,
       });
     } catch (error) {
-      next(error);
+      next(res.status(500).json({
+        statusCode: 500,
+        message: "Failed to get all posts"
+      }));
     }
   }
 
@@ -122,11 +101,7 @@ export class PostsController {
     const { postId } = req.params;
 
     try {
-      const postRef = doc(
-        PostsController.db,
-        PostsController.collectionPath,
-        postId
-      );
+      const postRef = doc(PostsController.db, PostsController.collectionPath, postId);
       const postsSnapshot = await getDoc(postRef);
 
       if (!postsSnapshot.exists()) {
@@ -141,10 +116,7 @@ export class PostsController {
       let comments: IComment[] = [];
 
       if (commentIds.length > 0) {
-        const commentsRef = collection(
-          PostsController.db,
-          PostsController.commentsCollectionPath
-        );
+        const commentsRef = collection(PostsController.db, PostsController.commentsCollectionPath);
         const commentsQuery = query(
           commentsRef,
           where("__name__", "in", commentIds)
@@ -167,15 +139,14 @@ export class PostsController {
         },
       });
     } catch (error) {
-      next(error);
+      next(res.status(500).json({
+        statusCode: 500,
+        message: "Failed to get post"
+      }));
     }
   }
 
-  static async getPostsByUsername(
-    req: Request,
-    res: Response,
-    next: NextFunction
-  ) {
+  static async getPostsByUsername(req: Request, res: Response, next: NextFunction) {
     const { username } = req.params;
 
     if (!username) {
@@ -186,10 +157,7 @@ export class PostsController {
     }
 
     try {
-      const postsRef = collection(
-        PostsController.db,
-        PostsController.collectionPath
-      );
+      const postsRef = collection(PostsController.db, PostsController.collectionPath);
       const postsQuery = query(postsRef, where("username", "==", username));
       const querySnapshot = await getDocs(postsQuery);
 
@@ -209,10 +177,7 @@ export class PostsController {
           let comments: IComment[] = [];
 
           if (commentIds.length > 0) {
-            const commentsRef = collection(
-              PostsController.db,
-              PostsController.commentsCollectionPath
-            );
+            const commentsRef = collection(PostsController.db, PostsController.commentsCollectionPath);
             const commentsQuery = query(
               commentsRef,
               where("__name__", "in", commentIds)
@@ -239,7 +204,10 @@ export class PostsController {
         data: posts,
       });
     } catch (error) {
-      next(error);
+      next(res.status(500).json({
+        statusCode: 500,
+        message: "Unable to get posts"
+      }));
     }
   }
 
@@ -277,8 +245,11 @@ export class PostsController {
         },
       });
     } catch (error) {
-      next(error);
-    }
+        next(res.status(500).json({
+          statusCode: 500,
+          message: "Unable to create post"
+        }));    
+      }
   }
 
   static async updatePost(req: Request, res: Response, next: NextFunction) {
@@ -305,11 +276,7 @@ export class PostsController {
     }
 
     try {
-      const postRef = doc(
-        PostsController.db,
-        PostsController.collectionPath,
-        postId
-      );
+      const postRef = doc(PostsController.db, PostsController.collectionPath, postId);
       const dataToUpdate = {
         ...updatedData,
         updated_at: serverTimestamp(),
@@ -322,7 +289,10 @@ export class PostsController {
         message: "Post updated successfully",
       });
     } catch (error) {
-      next(error);
+      next(res.status(500).json({
+        statusCode: 500,
+        message: "Unable to update post"
+      }));
     }
   }
 
@@ -330,11 +300,7 @@ export class PostsController {
     const { postId } = req.params;
 
     try {
-      const postRef = doc(
-        PostsController.db,
-        PostsController.collectionPath,
-        postId
-      );
+      const postRef = doc(PostsController.db, PostsController.collectionPath, postId);
       const postSnapshot = await getDoc(postRef);
 
       if (!postSnapshot.exists()) {
@@ -370,11 +336,7 @@ export class PostsController {
     }
 
     try {
-      const postRef = doc(
-        PostsController.db,
-        PostsController.collectionPath,
-        postId
-      );
+      const postRef = doc(PostsController.db, PostsController.collectionPath, postId);
       const postSnapshot = await getDoc(postRef);
 
       if (!postSnapshot.exists()) {
@@ -417,11 +379,7 @@ export class PostsController {
     }
   }
 
-  static async removePostUpvote(
-    req: Request,
-    res: Response,
-    next: NextFunction
-  ) {
+  static async removePostUpvote(req: Request, res: Response, next: NextFunction) {
     const { postId } = req.params;
     const { username } = req.body;
 
@@ -433,11 +391,7 @@ export class PostsController {
     }
 
     try {
-      const postRef = doc(
-        PostsController.db,
-        PostsController.collectionPath,
-        postId
-      );
+      const postRef = doc(PostsController.db, PostsController.collectionPath, postId);
 
       const postSnap = await getDoc(postRef);
 
@@ -488,11 +442,7 @@ export class PostsController {
     }
 
     try {
-      const postRef = doc(
-        PostsController.db,
-        PostsController.collectionPath,
-        postId
-      );
+      const postRef = doc(PostsController.db, PostsController.collectionPath, postId);
 
       const postSnap = await getDoc(postRef);
       if (!postSnap.exists()) {
@@ -535,20 +485,12 @@ export class PostsController {
     }
   }
 
-  static async removePostDownvote(
-    req: Request,
-    res: Response,
-    next: NextFunction
-  ) {
+  static async removePostDownvote(req: Request, res: Response, next: NextFunction) {
     const { postId } = req.params;
     const { username } = req.body;
 
     try {
-      const postRef = doc(
-        PostsController.db,
-        PostsController.collectionPath,
-        postId
-      );
+      const postRef = doc(PostsController.db, PostsController.collectionPath, postId);
 
       const postSnap = await getDoc(postRef);
 
@@ -587,11 +529,7 @@ export class PostsController {
     }
   }
 
-  static async getUserVotedPosts(
-    req: Request,
-    res: Response,
-    next: NextFunction
-  ) {
+  static async getUserVotedPosts(req: Request, res: Response, next: NextFunction) {
     const { username } = req.params;
 
     try {

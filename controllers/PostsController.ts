@@ -14,24 +14,9 @@ import {
   increment,
 } from "firebase/firestore";
 import { partialPostSchema, postSchema } from "../schemas/postSchema";
+import { IComment } from "../interfaces/comment.interface";
+import { IPostData } from "../interfaces/post.interface";
 
-interface Comment {
-  id: string;
-  text: string;
-  author: string;
-  timestamp: Date;
-}
-interface PostData {
-    username: string;
-    title: string;
-    content: string;
-    created_at: Date;
-    updated_at: Date;
-    upvotes: number;
-    downvotes: number;
-    upvoters?: Record<string, boolean>;
-    downvoters?: Record<string, boolean>;
-  }
 export class PostsController {
   static readonly PATH = "/posts";
   static collectionPath = "Posts";
@@ -48,7 +33,10 @@ export class PostsController {
       `${PostsController.PATH}/user/:username`,
       PostsController.getPostsByUsername
     );
-    router.get(`${PostsController.PATH}/user/:username/votes`, PostsController.getUserVotedPosts);
+    router.get(
+      `${PostsController.PATH}/user/:username/votes`,
+      PostsController.getUserVotedPosts
+    );
 
     router.post(PostsController.PATH, PostsController.createPost);
     router.post(
@@ -63,7 +51,10 @@ export class PostsController {
       `${PostsController.PATH}/:postId/downvote`,
       PostsController.downvotePost
     );
-    router.post(`${PostsController.PATH}/:postId/removeDownvote`, PostsController.removePostDownvote);
+    router.post(
+      `${PostsController.PATH}/:postId/removeDownvote`,
+      PostsController.removePostDownvote
+    );
 
     router.put(`${PostsController.PATH}/:postId`, PostsController.updatePost);
 
@@ -87,7 +78,7 @@ export class PostsController {
           const postId = postDoc.id;
 
           const commentIds = postData.comments || [];
-          let comments: Comment[] = [];
+          let comments: IComment[] = [];
 
           if (commentIds.length > 0) {
             const commentsRef = collection(
@@ -104,8 +95,8 @@ export class PostsController {
               (commentDoc) =>
                 ({
                   id: commentDoc.id,
-                  ...commentDoc.data(),
-                } as Comment)
+                  ...(commentDoc.data() as IComment)
+                })
             );
           }
 
@@ -147,7 +138,7 @@ export class PostsController {
 
       const postData = postsSnapshot.data();
       const commentIds = postData.comments || [];
-      let comments: Comment[] = [];
+      let comments: IComment[] = [];
 
       if (commentIds.length > 0) {
         const commentsRef = collection(
@@ -160,13 +151,10 @@ export class PostsController {
         );
         const commentsSnapshot = await getDocs(commentsQuery);
 
-        comments = commentsSnapshot.docs.map(
-          (doc) =>
-            ({
-              id: doc.id,
-              ...doc.data(),
-            } as Comment)
-        );
+        comments = commentsSnapshot.docs.map((doc) => ({
+          id: doc.id,
+          ...(doc.data() as IComment),
+        }));
       }
 
       res.status(200).json({
@@ -218,7 +206,7 @@ export class PostsController {
           const postId = doc.id;
 
           const commentIds = postData.comments || [];
-          let comments: Comment[] = [];
+          let comments: IComment[] = [];
 
           if (commentIds.length > 0) {
             const commentsRef = collection(
@@ -231,13 +219,10 @@ export class PostsController {
             );
             const commentsSnapshot = await getDocs(commentsQuery);
 
-            comments = commentsSnapshot.docs.map(
-              (commentDoc) =>
-                ({
-                  id: commentDoc.id,
-                  ...commentDoc.data(),
-                } as Comment)
-            );
+            comments = commentsSnapshot.docs.map((commentDoc) => ({
+              id: commentDoc.id,
+              ...(commentDoc.data() as IComment),
+            }));
           }
 
           return {
@@ -415,7 +400,6 @@ export class PostsController {
         });
       }
 
-
       await updateDoc(postRef, {
         upvotes: increment(1),
         upvoters: { ...postData.upvoters, [username]: true },
@@ -520,7 +504,7 @@ export class PostsController {
 
       const postData = postSnap.data();
       const hasUpvoted = postData.upvoters && postData.upvoters[username];
-      
+
       if (postData.downvoters && postData.downvoters[username]) {
         res.status(200).json({
           statusCode: 200,
@@ -533,7 +517,6 @@ export class PostsController {
           [`upvoters.${username}`]: deleteField(),
         });
       }
-
 
       await updateDoc(postRef, {
         downvotes: increment(1),
@@ -552,19 +535,27 @@ export class PostsController {
     }
   }
 
-  static async removePostDownvote(req: Request, res: Response, next: NextFunction) {
+  static async removePostDownvote(
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ) {
     const { postId } = req.params;
     const { username } = req.body;
 
     try {
-      const postRef = doc(PostsController.db, PostsController.collectionPath, postId);
+      const postRef = doc(
+        PostsController.db,
+        PostsController.collectionPath,
+        postId
+      );
 
       const postSnap = await getDoc(postRef);
 
       if (!postSnap.exists()) {
         return res.status(404).json({
-            statusCode: 404,
-            message: "Post not found"
+          statusCode: 404,
+          message: "Post not found",
         });
       }
 
@@ -574,8 +565,8 @@ export class PostsController {
 
       if (!downvoters[username]) {
         return res.status(400).json({
-            statusCode: 400, 
-            message: "User has not downvoted this post"
+          statusCode: 400,
+          message: "User has not downvoted this post",
         });
       }
 
@@ -587,25 +578,31 @@ export class PostsController {
       res.status(200).json({
         statusCode: 200,
         message: "Downvote removed successfully",
-      })
+      });
     } catch (error) {
       next({
-        statusCode: 500, 
-        message: "Failed to remove downupvote"
+        statusCode: 500,
+        message: "Failed to remove downupvote",
       });
     }
   }
 
-  static async getUserVotedPosts(req: Request,res: Response, next: NextFunction) {
+  static async getUserVotedPosts(
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ) {
     const { username } = req.params;
 
     try {
-      const postsSnapshot = await getDocs(collection(PostsController.db, PostsController.collectionPath));
+      const postsSnapshot = await getDocs(
+        collection(PostsController.db, PostsController.collectionPath)
+      );
 
       const votedPosts = postsSnapshot.docs
         .map((doc) => ({
           id: doc.id,
-          ...(doc.data() as PostData),
+          ...(doc.data() as IPostData),
         }))
         .filter((post) => {
           const upvoters = post.upvoters || {};
@@ -616,13 +613,13 @@ export class PostsController {
       res.status(200).json({
         statusCode: 200,
         message: "User voted posts received successfully",
-        data: votedPosts
-      })
+        data: votedPosts,
+      });
     } catch (error) {
       next({
-        statusCode: 500, 
-        message: "Failed to retrieve voted posts"
-    });
+        statusCode: 500,
+        message: "Failed to retrieve voted posts",
+      });
     }
   }
 }

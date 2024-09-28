@@ -3,6 +3,7 @@ import { initializeApp } from "firebase/app";
 import { getFirestore } from "firebase/firestore";
 import dotenv from "dotenv";
 import { PostsController } from "./controllers/PostsController";
+import { CommentsController } from "./controllers/CommentsController";
 
 dotenv.config();
 
@@ -24,6 +25,7 @@ const PORT = process.env.PORT;
 app.use(express.json());
 
 app.use(PostsController.registerRouter(db));
+app.use(CommentsController.registerRouter(db));
 
 app.use("*", (error: any, req: Request, res: Response, next: NextFunction) => {
   return res.status(error.statusCode).json(error);

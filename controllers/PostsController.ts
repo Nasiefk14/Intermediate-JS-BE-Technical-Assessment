@@ -6,12 +6,12 @@ import {
   query,
   doc,
   getDoc,
-  addDoc,
   serverTimestamp,
   updateDoc,
   deleteDoc,
   deleteField,
   increment,
+  setDoc,
 } from "firebase/firestore";
 import { partialPostSchema, postSchema } from "../schemas/postSchema";
 import { IComment } from "../interfaces/comment.interface";
@@ -227,8 +227,8 @@ export class PostsController {
     const { username, title, content } = parseResult.data;
 
     try {
-      const result = await addDoc(
-        collection(PostsController.db, PostsController.collectionPath),
+      const postRef = doc(collection(PostsController.db, PostsController.collectionPath))
+      await setDoc(postRef,
         {
           username,
           title,
@@ -237,11 +237,12 @@ export class PostsController {
           updated_at: serverTimestamp(),
         }
       );
+
       res.status(201).json({
         statusCode: 201,
         message: "Post created successfully",
         data: {
-          id: result.id,
+          id: postRef.id,
         },
       });
     } catch (error) {
@@ -489,6 +490,13 @@ export class PostsController {
     const { postId } = req.params;
     const { username } = req.body;
 
+    if (!username) {
+      return next({
+        statusCode: 400,
+        message: "Username is required",
+      });
+    }
+
     try {
       const postRef = doc(PostsController.db, PostsController.collectionPath, postId);
 
@@ -531,12 +539,12 @@ export class PostsController {
 
   static async getUserVotedPosts(req: Request, res: Response, next: NextFunction) {
     const { username } = req.params;
-
+  
     try {
       const postsSnapshot = await getDocs(
         collection(PostsController.db, PostsController.collectionPath)
       );
-
+  
       const votedPosts = postsSnapshot.docs
         .map((doc) => ({
           id: doc.id,
@@ -547,17 +555,21 @@ export class PostsController {
           const downvoters = post.downvoters || {};
           return upvoters[username] || downvoters[username];
         });
-
+  
+      if (votedPosts.length === 0) {
+        return res.status(404).json({
+          statusCode: 404,
+          message: "User has not voted on any posts",
+        })
+      }
+  
       res.status(200).json({
         statusCode: 200,
         message: "User voted posts received successfully",
         data: votedPosts,
       });
     } catch (error) {
-      next({
-        statusCode: 500,
-        message: "Failed to retrieve voted posts",
-      });
+      next(error);
     }
   }
 }

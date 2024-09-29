@@ -10,6 +10,7 @@ import {
   getDoc,
   increment,
   deleteField,
+  setDoc,
 } from "firebase/firestore";
 import { commentSchema, partialCommentSchema } from "../schemas/commentSchema";
 import { IComment } from "../interfaces/comment.interface";
@@ -76,8 +77,9 @@ export class CommentsController {
     const { username, content } = parseResult.data;
 
     try {
-      const result = await addDoc(
-        collection(CommentsController.db, CommentsController.collectionPath),
+      const commentRef = doc(collection(CommentsController.db, CommentsController.collectionPath));
+      await setDoc(
+        commentRef,
         {
           username,
           content,
@@ -94,13 +96,13 @@ export class CommentsController {
         postId
       );
       await updateDoc(postRef, {
-        comments: arrayUnion(result.id),
+        comments: arrayUnion(commentRef.id),
       });
 
       res.status(201).json({
         statusCode: 201,
         message: "Comment created successfully",
-        data: { id: result.id },
+        data: { id: commentRef.id },
       });
     } catch (error) {
       next(

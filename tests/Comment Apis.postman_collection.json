@@ -1,0 +1,222 @@
+{
+	"info": {
+		"_postman_id": "8952623f-fdf1-4a70-8f46-f7574ac920e3",
+		"name": "Comment Apis",
+		"description": "## 1\\. Create a comment\n\n- **Method**: POST\n    \n- **URL**: [http://localhost:{PORT}/posts/{postId}/comments](http://localhost:6180/posts)\n    \n- **Description**: Creates a comment on a specific post.\n    \n- **Params**:\n    \n    - `{postId}`: The ID of the post you want to comment on.\n        \n- **Body(JSON) :**\n    \n\n``` json\n{\n      \"username\": \"\",\n      \"content\": \"\"\n}\n\n\n ```\n\n## 2\\. Upvote a comment\n\n- **Method**: POST\n    \n- **URL**: [http://localhost:{PORT}/posts/{postId}/comments/{commentId}/upvote](http://localhost:6180/posts)\n    \n- **Description**: Upvotes a comment.\n    \n- **Params**:\n    \n    - `{postId}`: The ID of the post that contains the comment.\n        \n    - `{commentId}`: The ID of the comment to upvote.\n        \n- **Body(JSON) :**\n    \n\n``` json\n\n{\n    \"username\": \"\"\n}\n\n\n ```\n\n## 3\\. Remove a upvote on a comment\n\n- **Method**: POST\n    \n- **URL**: [http://localhost:{PORT}/posts/{postId}/comments/{commentId}/removeUpvote](http://localhost:6180/posts)\n    \n- **Description**: Removes a upvote on a comment.\n    \n- **Params**:\n    \n    - `{postId}`: The ID of the post that contains the comment.\n        \n    - `{commentId}`: The ID of the comment to remove an upvote from.\n        \n- **Body(JSON) :**\n    \n\n``` json\n\n{\n    \"username\": \"\"\n}\n\n\n ```\n\n## 4\\. Downvote a comment\n\n- **Method**: POST\n    \n- **URL**: [http://localhost:{PORT}/posts/{postId}/comments/{commentId}/downvote](http://localhost:6180/posts)\n    \n- **Description**: Downvotes a comment.\n    \n- **Params**:\n    \n    - `{postId}`: The ID of the post that contains the comment.\n        \n    - `{commentId}`: The ID of the comment to downvote.\n        \n- **Body(JSON) :**\n    \n\n``` json\n\n{\n    \"username\": \"\"\n}\n\n\n ```\n\n## 5\\. Remove a downvote on a comment\n\n- **Method**: POST\n    \n- **URL**: [http://localhost:{PORT}/posts/{postId}/comments/{commentId}/removeDownvote](http://localhost:6180/posts)\n    \n- **Description**: Removes a downvote on a comment.\n    \n- **Params**:\n    \n    - `{postId}`: The ID of the post that contains the comment.\n        \n    - `{commentId}`: The ID of the comment to remove an downvote from.\n        \n- **Body(JSON) :**\n    \n\n``` json\n\n{\n    \"username\": \"\"\n}\n\n\n ```\n\n## 6\\. Update a comment\n\n- **Method**: PUT\n    \n- **URL**: [http://localhost:{PORT}/posts/{postId}/comments/{commentId}](http://localhost:6180/posts)\n    \n- **Description**: Update the content of a comment.\n    \n- **Params**:\n    \n    - `{postId}`: The ID of the post that contains the comment.\n        \n    - `{commentId}`: The ID of the comment to update.\n        \n- **Body(JSON) :**\n    \n\n``` json\n\n{\n    \"content\": \"\"\n}\n\n\n ```\n\n## 7\\. Delete a comment\n\n- **Method**: DELETE\n    \n- **URL**: [http://localhost:{PORT}/posts/{postId}/comments/{commentId}](http://localhost:6180/posts)\n    \n- **Description**: Deletes a specific comment on a post.\n    \n- **Params**:\n    \n    - `{postId}`: The ID of the post that contains the comment.\n        \n    - `{commentId}`: The ID of the comment to delete.\n        \n- **Body:** None",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "28777231"
+	},
+	"item": [
+		{
+			"name": "Create a comment",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"username\": \"Specno Test User\",\n    \"content\": \"A Test Comment\"\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:{{PORT}}/posts/{{POST_ID}}/comments",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "{{PORT}}",
+					"path": [
+						"posts",
+						"{{POST_ID}}",
+						"comments"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Upvote a comment",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"username\": \"Upvote Comment\"\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:{{PORT}}/posts/{{POST_ID}}/comments/{{COMMENT_ID}}/upvote",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "{{PORT}}",
+					"path": [
+						"posts",
+						"{{POST_ID}}",
+						"comments",
+						"{{COMMENT_ID}}",
+						"upvote"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Remove comment upvote",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"username\": \"Jeff\"\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:{{PORT}}/posts/{{POST_ID}}/comments/{{COMMENT_ID}}/removeUpvote",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "{{PORT}}",
+					"path": [
+						"posts",
+						"{{POST_ID}}",
+						"comments",
+						"{{COMMENT_ID}}",
+						"removeUpvote"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Downvote comment",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"username\": \"Jeff\"\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:{{PORT}}/posts/{{POST_ID}}/comments/{{COMMENT_ID}}/downvote",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "{{PORT}}",
+					"path": [
+						"posts",
+						"{{POST_ID}}",
+						"comments",
+						"{{COMMENT_ID}}",
+						"downvote"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Remove comment downvote",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"username\": \"Specno Test User 2\"\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:{{PORT}}/posts/{{POST_ID}}/comments/{{COMMENT_ID}}/removeDownvote",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "{{PORT}}",
+					"path": [
+						"posts",
+						"{{POST_ID}}",
+						"comments",
+						"{{COMMENT_ID}}",
+						"removeDownvote"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Update comment",
+			"request": {
+				"method": "PUT",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"content\": \"Update the test content with a test value\"\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:{{PORT}}/posts/{{POST_ID}}/comments/{{COMMENT_ID}}",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "{{PORT}}",
+					"path": [
+						"posts",
+						"{{POST_ID}}",
+						"comments",
+						"{{COMMENT_ID}}"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Delete commnent",
+			"request": {
+				"method": "DELETE",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:{{PORT}}/posts/{{POST_ID}}/comments/{{COMMENT_ID}}",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "{{PORT}}",
+					"path": [
+						"posts",
+						"{{POST_ID}}",
+						"comments",
+						"{{COMMENT_ID}}"
+					]
+				}
+			},
+			"response": []
+		}
+	]
+}

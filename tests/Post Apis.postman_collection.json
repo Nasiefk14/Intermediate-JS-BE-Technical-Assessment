@@ -1,0 +1,272 @@
+{
+	"info": {
+		"_postman_id": "3e738ab9-5738-45a4-b789-052e8fe53b25",
+		"name": "Post Apis",
+		"description": "## 1\\. Get All Posts\n\n- **Method**: GET\n    \n- **URL**: [http://localhost:{PORT}/posts](http://localhost:6180/posts)\n    \n- **Description**: Retrieves a list of all posts.\n    \n- **Params**: None.\n    \n- **Body:** None\n    \n\n### 2\\. Get Post by ID\n\n- **Method**: GET\n    \n- **URL**: [http://localhost:{PORT}/posts/{postId}](http://localhost:6180/posts/{postId})\n    \n- **Description**: Fetches a specific post by its ID.\n    \n- **Params**:\n    \n    - `{postId}`: ID of the post to retrieve.\n        \n- **Body**: None.\n    \n\n### 3\\. Get All Posts by Username\n\n- **Method**: GET\n    \n- **URL**: [http://localhost:{PORT}/posts/user/{username}](http://localhost:6180/posts/user/{username})\n    \n- **Description**: Fetches all posts created by a specific user.\n    \n- **Params**:\n    \n    - `{username}`: The username of the user whose posts you want to retrieve.\n        \n- **Body**: None.\n    \n\n### 4\\. Get All Posts a User Has Voted On\n\n- **Method**: GET\n    \n- **URL**: [http://localhost:{PORT}/posts/user/{username}/votes](http://localhost:6180/posts/user/{username}/votes)\n    \n- **Description**: Retrieves all posts a user has upvoted or downvoted.\n    \n- **Params**:\n    \n    - `{username}`: The username of the person who has voted on posts you want to see.\n        \n- **Body**: None.\n    \n\n### 5\\. Create a Post\n\n- **Method**: POST\n    \n- **URL**: [http://localhost:{PORT}/posts](http://localhost:6180/posts)\n    \n- **Description**: Creates a new post.\n    \n- **Params**: None.\n    \n- **Body(JSON)**:\n    \n\n``` json\n{\n    \"username\": \"\",\n    \"title\": \"\",\n    \"content\": \"\"\n}\n\n ```\n\n### 6\\. Upvote a Post\n\n- **Method**: POST\n    \n- **URL**: [http://localhost:{PORT}/posts/{postId}/upvote](http://localhost:6180/posts)\n    \n- **Description**: Add an upvote to a specific post\n    \n- **Params**:\n    \n    - `{postId}`: The ID of the post to upvote.\n        \n- **Body(JSON):**\n    \n\n``` json\n{\n    \"username\": \"\"\n}\n\n ```\n\n### 7\\. Remove a upvote from a Post\n\n- **Method**: POST\n    \n- **URL**: [http://localhost:{PORT}/posts/{postId}/removeUpvote](http://localhost:6180/posts)\n    \n- **Description**: Remove a upvote from a specific post\n    \n- **Params**:\n    \n    - `{postId}`: The ID of the post to remove the upvote from.\n        \n- **Body(JSON):**\n    \n\n``` json\n{\n    \"username\": \"\"\n}\n\n ```\n\n### 8\\. Downvote a Post\n\n- **Method**: POST\n    \n- **URL**: [http://localhost:{PORT}/posts/{postId}/downvote](http://localhost:6180/posts)\n    \n- **Description**: Add a downvote to a specific post\n    \n- **Params**:\n    \n    - `{postId}`: The ID of the post to downvote.\n        \n- **Body(JSON):**\n    \n\n``` json\n{\n    \"username\": \"\"\n}\n\n ```\n\n### 9\\. Remove a downvote from a Post\n\n- **Method**: POST\n    \n- **URL**: [http://localhost:{PORT}/posts/{postId}/removeDownvote](http://localhost:6180/posts)\n    \n- **Description**: Remove a downvote to a specific post\n    \n- **Params**:\n    \n    - `{postId}`: The ID of the post to remove the downvote from.\n        \n- **Body(JSON):**\n    \n\n``` json\n{\n    \"username\": \"\"\n}\n\n ```\n\n### **10\\. Update a Post**\n\n- **Method**: PUT\n    \n- **URL**: [http://localhost:{PORT}/posts/{postId}](http://localhost:6180/posts/{postId})\n    \n- **Description**: Updates the content of a post.\n    \n- **Params**:\n    \n    - `{postId}`: The ID of the post to update.\n        \n- **Body(JSON)**:\n    \n\n``` json\n{\n    \"content\": \"\"\n}\n\n ```\n\n### **11\\. Update a Post**\n\n- **Method**: DELETE\n    \n- **URL**: [http://localhost:{PORT}/posts/{postId}](http://localhost:6180/posts/{postId})\n    \n- **Description**: Delete a post.\n    \n- **Params**:\n    \n    - `{postId}`: The ID of the post to delete.\n        \n- **Body:** None",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "28777231"
+	},
+	"item": [
+		{
+			"name": "Get All Posts",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:{{PORT}}/posts",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "{{PORT}}",
+					"path": [
+						"posts"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Get Post By ID",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:{{PORT}}/posts/{{POST_ID}}",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "{{PORT}}",
+					"path": [
+						"posts",
+						"{{POST_ID}}"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Get Post By Username",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:{{PORT}}/posts/user/{{USERNAME}}",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "{{PORT}}",
+					"path": [
+						"posts",
+						"user",
+						"{{USERNAME}}"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Create a Post",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"username\": \"Specno Test User\",\n    \"title\": \"Test Title\",\n    \"content\": \"Test Content...\"\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:6180/posts",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "6180",
+					"path": [
+						"posts"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Upvote Post",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:{{PORT}}/posts/{{POST_ID}}/upvote",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "{{PORT}}",
+					"path": [
+						"posts",
+						"{{POST_ID}}",
+						"upvote"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Remove Post Upvote",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:{{PORT}}/posts/{{POST_ID}}/removeUpvote",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "{{PORT}}",
+					"path": [
+						"posts",
+						"{{POST_ID}}",
+						"removeUpvote"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Downvote Post",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"username\": \"Jeff\"\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:{{PORT}}/posts/{{POST_ID}}/downvote",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "{{PORT}}",
+					"path": [
+						"posts",
+						"{{POST_ID}}",
+						"downvote"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Remove Post Downvote",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"username\": \"Jeff\"\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:{{PORT}}/posts/{{POST_ID}}/removeDownvote",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "{{PORT}}",
+					"path": [
+						"posts",
+						"{{POST_ID}}",
+						"removeDownvote"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Update Post",
+			"request": {
+				"method": "PUT",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"content\": \"Content Update Test\"\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:{{PORT}}/posts/{{POST_ID}}",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "{{PORT}}",
+					"path": [
+						"posts",
+						"{{POST_ID}}"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Delete Post",
+			"request": {
+				"method": "DELETE",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:{{PORT}}/posts/GhlPanVokSnUPPEUu9WH",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "{{PORT}}",
+					"path": [
+						"posts",
+						"GhlPanVokSnUPPEUu9WH"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Get All Posts A User Has Voted On",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:{{PORT}}/posts/user/{{USERNAME}}/votes",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "{{PORT}}",
+					"path": [
+						"posts",
+						"user",
+						"{{USERNAME}}",
+						"votes"
+					]
+				}
+			},
+			"response": []
+		}
+	]
+}

@@ -1,0 +1,127 @@
+###########################
+####### POSTS TEST ########
+###########################
+
+### GET all posts
+GET http://localhost:{PORT}/posts
+
+### Get post by ID
+GET http://localhost:{PORT}/posts/{postId}
+
+### Get all posts by username
+GET http://localhost:{PORT}/posts/user/{username}
+
+### Get all posts a username has voted on
+GET http://localhost:{PORT}/posts/user/{username}/votes
+
+### Create a post
+POST http://localhost:{PORT}/posts
+Content-Type: application/json
+
+{
+    "username": "",
+    "title": "",
+    "content": ""
+}
+
+### Add a upvote on a post
+POST http://localhost:{PORT}/posts/{postId}/upvote
+Content-Type: application/json
+
+{
+    "username": ""
+}
+
+### Remove a upvote on a post
+POST http://localhost:{PORT}/posts/{postId}/removeUpvote
+Content-Type: application/json
+
+{
+    "username": ""
+}
+
+### Add a downvote on a post
+POST http://localhost:{PORT}/posts/{postId}/downvote
+Content-Type: application/json
+
+{
+    "username": "Nasief Khan"
+}
+
+### Remove a downvote on a post
+POST http://localhost:{PORT}/posts/{postId}/removeDownvote
+Content-Type: application/json
+
+{
+    "username": ""
+}
+
+### Update a post
+PUT http://localhost:{PORT}/posts/{postId}
+Content-Type: application/json
+
+{
+    "content": ""
+}
+
+### Delete post by id
+DELETE  http://localhost:{PORT}/posts/{postId}
+
+
+
+###########################
+###### COMMENTS TEST ######
+###########################
+
+
+### Create a comment on a post using postId
+POST http://localhost:{PORT}/posts/{postId}/comments
+Content-Type: application/json
+
+{
+    "username": "",
+    "content": ""
+}
+
+### Upvote a commment on a post
+POST http://localhost:{PORT}/posts/{commentId}/comments/{commentId}/upvote
+Content-Type: application/json
+
+{
+    "username": ""
+}
+
+### Remove upvote a commment on a post
+POST http://localhost:{PORT}/posts/{postId}/comments/{commentId}/removeUpvote
+Content-Type: application/json
+
+{
+    "username": ""
+}
+
+### Downvote a commment on a post
+POST http://localhost:{PORT}/posts/{portId}/comments/{commentId}/downvote
+Content-Type: application/json
+
+{
+    "username": ""
+}
+
+### Remove downvote a commment on a post
+POST http://localhost:{PORT}/posts/{postId}/comments/{commentId}/removeDownvote
+Content-Type: application/json
+
+{
+    "username": ""
+}
+
+### Update a comment
+PUT http://localhost:{PORT}/posts/{postId}/comments/{commentId}
+Content-Type: application/json
+
+{
+    "content": ""
+}
+
+### Delete A comment
+DELETE http://localhost:{PORT}/posts/{postId}/comments/{commentId}

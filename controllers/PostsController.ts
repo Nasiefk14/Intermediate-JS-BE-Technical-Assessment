@@ -16,6 +16,9 @@ import {
 import { partialPostSchema, postSchema } from "../schemas/postSchema";
 import { IComment } from "../interfaces/comment.interface";
 import { IPostData } from "../interfaces/post.interface";
+import { Error, NotFoundError } from "../utils/ErrorHandlerUtil";
+import { Success, SuccessfullyCreated } from "../utils/SuccessHandlerUtil";
+import { ResponseHandler } from "../utils/ResponseHandlerUtil";
 
 export class PostsController {
   static readonly PATH = "/posts";
@@ -46,10 +49,10 @@ export class PostsController {
   }
 
   static async getAll(_: Request, res: Response, next: NextFunction) {
+    const response = new ResponseHandler(res);
+    
     try {
-      const postsSnapshot = await getDocs(
-        collection(PostsController.db, PostsController.collectionPath)
-        );
+      const postsSnapshot = await getDocs(collection(PostsController.db, PostsController.collectionPath));
 
       const postList = await Promise.all(
         postsSnapshot.docs.map(async (postDoc) => {
@@ -61,10 +64,7 @@ export class PostsController {
 
           if (commentIds.length > 0) {
             const commentsRef = collection(PostsController.db, PostsController.commentsCollectionPath);
-            const commentsQuery = query(
-              commentsRef,
-              where("__name__", "in", commentIds)
-            );
+            const commentsQuery = query(commentsRef, where("__name__", "in", commentIds));
             const commentsSnapshot = await getDocs(commentsQuery);
 
             comments = commentsSnapshot.docs.map(
@@ -84,31 +84,22 @@ export class PostsController {
         })
       );
 
-      res.status(200).send({
-        statusCode: 200,
-        message: "Posts retreived successfully",
-        data: postList,
-      });
+      response.send(new Success(postList, "Post retreived successfully"));
     } catch (error) {
-      next(res.status(500).json({
-        statusCode: 500,
-        message: "Failed to get all posts"
-      }));
+      next(new Error(500, "Failed to get all posts"));
     }
   }
 
   static async getPostById(req: Request, res: Response, next: NextFunction) {
     const { postId } = req.params;
+    const response = new ResponseHandler(res);
 
     try {
       const postRef = doc(PostsController.db, PostsController.collectionPath, postId);
       const postsSnapshot = await getDoc(postRef);
 
       if (!postsSnapshot.exists()) {
-        return next({
-          statusCode: 404,
-          message: "Post not found",
-        });
+        return next(new NotFoundError("Post not found"));
       }
 
       const postData = postsSnapshot.data();
@@ -117,10 +108,7 @@ export class PostsController {
 
       if (commentIds.length > 0) {
         const commentsRef = collection(PostsController.db, PostsController.commentsCollectionPath);
-        const commentsQuery = query(
-          commentsRef,
-          where("__name__", "in", commentIds)
-        );
+        const commentsQuery = query(commentsRef, where("__name__", "in", commentIds));
         const commentsSnapshot = await getDocs(commentsQuery);
 
         comments = commentsSnapshot.docs.map((doc) => ({
@@ -129,31 +117,22 @@ export class PostsController {
         }));
       }
 
-      res.status(200).json({
-        statusCode: 200,
-        message: "Post retreived successfully",
-        data: {
-          ...postData,
-          id: postsSnapshot.id,
-          comments,
-        },
-      });
+      response.send(new Success({
+        ...postData,
+        id: postsSnapshot.id,
+        comments
+      },"Post retreived successfully"));
     } catch (error) {
-      next(res.status(500).json({
-        statusCode: 500,
-        message: "Failed to get post"
-      }));
+      next(new Error(500, "Failed to get post"));
     }
   }
 
   static async getPostsByUsername(req: Request, res: Response, next: NextFunction) {
     const { username } = req.params;
+    const response = new ResponseHandler(res);
 
     if (!username) {
-      return next({
-        statusCode: 400,
-        message: "Username is required",
-      });
+      return next(new Error(400, "Username is required"));
     }
 
     try {
@@ -162,13 +141,10 @@ export class PostsController {
       const querySnapshot = await getDocs(postsQuery);
 
       if (querySnapshot.empty) {
-        return next({
-          statusCode: 404,
-          message: "No posts found for this user.",
-        });
+        return next(new NotFoundError("No post found for this user."));
       }
 
-      const posts = await Promise.all(
+      const postsList = await Promise.all(
         querySnapshot.docs.map(async (doc) => {
           const postData = doc.data();
           const postId = doc.id;
@@ -178,10 +154,7 @@ export class PostsController {
 
           if (commentIds.length > 0) {
             const commentsRef = collection(PostsController.db, PostsController.commentsCollectionPath);
-            const commentsQuery = query(
-              commentsRef,
-              where("__name__", "in", commentIds)
-            );
+            const commentsQuery = query(commentsRef, where("__name__", "in", commentIds));
             const commentsSnapshot = await getDocs(commentsQuery);
 
             comments = commentsSnapshot.docs.map((commentDoc) => ({
@@ -198,30 +171,21 @@ export class PostsController {
         })
       );
 
-      res.status(200).json({
-        statusCode: 200,
-        message: "Posts retreived successfully",
-        data: posts,
-      });
+      response.send(new Success(postsList, "Posts retreived successfully"));
     } catch (error) {
-      next(res.status(500).json({
-        statusCode: 500,
-        message: "Unable to get posts"
-      }));
+      next(new Error(500, "Unable to get posts"))
     }
   }
 
   static async createPost(req: Request, res: Response, next: NextFunction) {
     const parseResult = postSchema.safeParse(req.body);
+    const response = new ResponseHandler(res);
 
     if (!parseResult.success) {
       const errorMessage = parseResult.error.errors
         .map((e) => e.message)
         .join(", ");
-      return next({
-        statusCode: 400,
-        message: errorMessage,
-      });
+      return next(new Error(400, errorMessage));    
     }
 
     const { username, title, content } = parseResult.data;
@@ -238,42 +202,28 @@ export class PostsController {
         }
       );
 
-      res.status(201).json({
-        statusCode: 201,
-        message: "Post created successfully",
-        data: {
-          id: postRef.id,
-        },
-      });
+      response.send(new SuccessfullyCreated({id: postRef.id}, "Post created successfully"));
     } catch (error) {
-        next(res.status(500).json({
-          statusCode: 500,
-          message: "Unable to create post"
-        }));    
-      }
+      next(new Error(500, "Unable to create post"));  
+    }
   }
 
   static async updatePost(req: Request, res: Response, next: NextFunction) {
     const { postId } = req.params;
     const parseResult = partialPostSchema.safeParse(req.body);
+    const response = new ResponseHandler(res);
 
     if (!parseResult.success) {
       const errorMessage = parseResult.error.errors
         .map((e) => e.message)
         .join(", ");
-      return next({
-        statusCode: 400,
-        message: errorMessage,
-      });
+      return next(new Error(400, errorMessage));
     }
 
     const updatedData = parseResult.data;
 
     if (Object.keys(updatedData).length === 0) {
-      return next({
-        statusCode: 400,
-        message: "No valid fields to update",
-      });
+      return next(new Error(400, "No valid fields to update"));
     }
 
     try {
@@ -285,55 +235,39 @@ export class PostsController {
 
       await updateDoc(postRef, dataToUpdate);
 
-      res.status(200).json({
-        statusCode: 200,
-        message: "Post updated successfully",
-      });
+      response.send(new Success(undefined, "Post updated sucessfully"));
     } catch (error) {
-      next(res.status(500).json({
-        statusCode: 500,
-        message: "Unable to update post"
-      }));
+      next(new Error(500, "Unable to update post"));
     }
   }
 
   static async deletePostById(req: Request, res: Response, next: NextFunction) {
     const { postId } = req.params;
+    const response = new ResponseHandler(res);
 
     try {
       const postRef = doc(PostsController.db, PostsController.collectionPath, postId);
       const postSnapshot = await getDoc(postRef);
 
       if (!postSnapshot.exists()) {
-        return next({
-          statusCode: 404,
-          message: "Post not found",
-        });
+        return next(new NotFoundError("Post not found"));
       }
 
       await deleteDoc(postRef);
 
-      res.status(200).json({
-        statusCode: 200,
-        message: "Post deleted successfully",
-      });
+      response.send(new Success(undefined, "Post deleted successfully"));
     } catch (error) {
-      next({
-        statusCode: 500,
-        message: "Failed to delete post",
-      });
+      next(new Error(500, "Failed to delete post"));
     }
   }
 
   static async upvotePost(req: Request, res: Response, next: NextFunction) {
     const { postId } = req.params;
     const { username } = req.body;
+    const response = new ResponseHandler(res);
 
     if (!username) {
-      return next({
-        statusCode: 400,
-        message: "Username is required",
-      });
+      return next(new Error(400, "Username is required"));
     }
 
     try {
@@ -341,20 +275,14 @@ export class PostsController {
       const postSnapshot = await getDoc(postRef);
 
       if (!postSnapshot.exists()) {
-        return next({
-          statusCode: 404,
-          message: "Post not found",
-        });
+        return next(new NotFoundError("Post not found"));
       }
 
       const postData = postSnapshot.data();
       const hasDownvoted = postData.downvoters && postData.downvoters[username];
 
       if (postData.upvoters && postData.upvoters[username]) {
-        return next({
-          statusCode: 200,
-          message: "User has already upvoted this post.",
-        });
+        return response.send(new Success(undefined, "User has already upvoted this post"));
       }
       if (hasDownvoted) {
         await updateDoc(postRef, {
@@ -368,27 +296,19 @@ export class PostsController {
         upvoters: { ...postData.upvoters, [username]: true },
       });
 
-      res.status(200).json({
-        statusCode: 200,
-        message: "Post upvoted successfully",
-      });
+      response.send(new Success(undefined, "Post upvoted successfully"));
     } catch (error) {
-      next({
-        statusCode: 500,
-        message: "Failed to upvote post",
-      });
+      next(new Error(500, "Failed to upvote post"));
     }
   }
 
   static async removePostUpvote(req: Request, res: Response, next: NextFunction) {
     const { postId } = req.params;
     const { username } = req.body;
+    const response = new ResponseHandler(res);
 
     if (!username) {
-      return next({
-        statusCode: 400,
-        message: "Username is required",
-      });
+      return next(new Error(400, "Username is required"));    
     }
 
     try {
@@ -397,10 +317,7 @@ export class PostsController {
       const postSnap = await getDoc(postRef);
 
       if (!postSnap.exists()) {
-        return next({
-          statusCode: 404,
-          message: "Post not found",
-        });
+        return next(new NotFoundError("Post not found"));      
       }
 
       const postData = postSnap.data();
@@ -408,10 +325,7 @@ export class PostsController {
       const voters = postData.upvoters || {};
 
       if (!voters[username]) {
-        return next({
-          statusCode: 400,
-          message: "User has not upvoted this post",
-        });
+        return next(new Error(400, "User has not upvoted this post"));
       }
 
       await updateDoc(postRef, {
@@ -419,27 +333,19 @@ export class PostsController {
         [`upvoters.${username}`]: deleteField(),
       });
 
-      res.status(200).json({
-        statusCode: 200,
-        message: "Upvote removed successfully",
-      });
+      response.send(new Success(undefined, "Upvote removed successfully"));
     } catch (error) {
-      next({
-        statusCode: 500,
-        message: "Failed to remove upvote",
-      });
+      next(new Error(500, "Failed to remove upvote"));
     }
   }
 
   static async downvotePost(req: Request, res: Response, next: NextFunction) {
     const { postId } = req.params;
     const { username } = req.body;
+    const response = new ResponseHandler(res);
 
     if (!username) {
-      return next({
-        statusCode: 400,
-        message: "Username is required",
-      });
+      return next(new Error(400, "Username is required"));
     }
 
     try {
@@ -447,20 +353,14 @@ export class PostsController {
 
       const postSnap = await getDoc(postRef);
       if (!postSnap.exists()) {
-        return next({
-          statusCode: 404,
-          message: "Post not found",
-        });
+        return next(new NotFoundError("Post not found"));
       }
 
       const postData = postSnap.data();
       const hasUpvoted = postData.upvoters && postData.upvoters[username];
 
       if (postData.downvoters && postData.downvoters[username]) {
-        res.status(200).json({
-          statusCode: 200,
-          message: "User has already downvoted this post.",
-        });
+        return response.send(new Success(undefined, "User has already downvoted this post"));
       }
       if (hasUpvoted) {
         await updateDoc(postRef, {
@@ -474,27 +374,19 @@ export class PostsController {
         downvoters: { ...postData.downvoters, [username]: true },
       });
 
-      res.status(200).json({
-        statusCode: 200,
-        message: "Post downvoted successfully.",
-      });
+      response.send(new Success(undefined, "Post downvoted successfully"));
     } catch (error) {
-      next({
-        statusCode: 500,
-        message: "Failed to downupvote post",
-      });
+      next(new Error(500, "Failed to downvote post"));
     }
   }
 
   static async removePostDownvote(req: Request, res: Response, next: NextFunction) {
     const { postId } = req.params;
     const { username } = req.body;
+    const response = new ResponseHandler(res);
 
     if (!username) {
-      return next({
-        statusCode: 400,
-        message: "Username is required",
-      });
+      return next(new Error(400, "Username is required"));
     }
 
     try {
@@ -503,10 +395,7 @@ export class PostsController {
       const postSnap = await getDoc(postRef);
 
       if (!postSnap.exists()) {
-        return res.status(404).json({
-          statusCode: 404,
-          message: "Post not found",
-        });
+        return next(new NotFoundError("Post not found"));
       }
 
       const postData = postSnap.data();
@@ -514,10 +403,7 @@ export class PostsController {
       const downvoters = postData.downvoters || {};
 
       if (!downvoters[username]) {
-        return res.status(400).json({
-          statusCode: 400,
-          message: "User has not downvoted this post",
-        });
+        return next(new Error(400, "User has not downvoted this post"));
       }
 
       await updateDoc(postRef, {
@@ -525,25 +411,18 @@ export class PostsController {
         [`downvoters.${username}`]: deleteField(),
       });
 
-      res.status(200).json({
-        statusCode: 200,
-        message: "Downvote removed successfully",
-      });
+      response.send(new Success(undefined, "Downvote removed successfully"));
     } catch (error) {
-      next({
-        statusCode: 500,
-        message: "Failed to remove downupvote",
-      });
+      next(new Error(500, "Failed to remove downvote"));
     }
   }
 
   static async getUserVotedPosts(req: Request, res: Response, next: NextFunction) {
     const { username } = req.params;
-  
+    const response = new ResponseHandler(res);
+
     try {
-      const postsSnapshot = await getDocs(
-        collection(PostsController.db, PostsController.collectionPath)
-      );
+      const postsSnapshot = await getDocs(collection(PostsController.db, PostsController.collectionPath));
   
       const votedPosts = postsSnapshot.docs
         .map((doc) => ({
@@ -557,19 +436,12 @@ export class PostsController {
         });
   
       if (votedPosts.length === 0) {
-        return res.status(404).json({
-          statusCode: 404,
-          message: "User has not voted on any posts",
-        })
+        return next(new NotFoundError("User has not voted on any posts"));
       }
   
-      res.status(200).json({
-        statusCode: 200,
-        message: "User voted posts received successfully",
-        data: votedPosts,
-      });
+      response.send(new Success(votedPosts, "User votes posts reveived successfully"));
     } catch (error) {
-      next(error);
+      next(new Error(500, "Failed to get user voted posts", error));
     }
   }
 }

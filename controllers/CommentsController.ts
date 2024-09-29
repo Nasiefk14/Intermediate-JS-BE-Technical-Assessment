@@ -1,6 +1,5 @@
 import { Router, Response, Request, NextFunction } from "express";
 import {
-  addDoc,
   collection,
   serverTimestamp,
   doc,
@@ -14,6 +13,9 @@ import {
 } from "firebase/firestore";
 import { commentSchema, partialCommentSchema } from "../schemas/commentSchema";
 import { IComment } from "../interfaces/comment.interface";
+import { Error, NotFoundError } from "../utils/ErrorHandlerUtil";
+import { Success, SuccessfullyCreated } from "../utils/SuccessHandlerUtil";
+import { ResponseHandler } from "../utils/ResponseHandlerUtil";
 
 export class CommentsController {
   static readonly PATH = "/posts/:postId/comments";
@@ -27,38 +29,21 @@ export class CommentsController {
     const router = Router();
 
     router.post(CommentsController.PATH, CommentsController.createComment);
-    router.post(
-      `${CommentsController.PATH}/:commentId/upvote`,
-      CommentsController.upvoteComment
-    );
-    router.post(
-      `${CommentsController.PATH}/:commentId/removeUpvote`,
-      CommentsController.removeUpvote
-    );
-    router.post(
-      `${CommentsController.PATH}/:commentId/downvote`,
-      CommentsController.downvoteComment
-    );
-    router.post(
-      `${CommentsController.PATH}/:commentId/removeDownvote`,
-      CommentsController.removeDownvote
-    );
+    router.post(`${CommentsController.PATH}/:commentId/upvote`, CommentsController.upvoteComment);
+    router.post(`${CommentsController.PATH}/:commentId/removeUpvote`, CommentsController.removeUpvote);
+    router.post(`${CommentsController.PATH}/:commentId/downvote`, CommentsController.downvoteComment);
+    router.post(`${CommentsController.PATH}/:commentId/removeDownvote`, CommentsController.removeDownvote);
 
-    router.put(
-      `${CommentsController.PATH}/:commentId`,
-      CommentsController.updateComment
-    );
+    router.put(`${CommentsController.PATH}/:commentId`, CommentsController.updateComment);
 
-    router.delete(
-      `${CommentsController.PATH}/:commentId`,
-      CommentsController.deleteComment
-    );
+    router.delete(`${CommentsController.PATH}/:commentId`, CommentsController.deleteComment);
 
     return router;
   }
 
   static async createComment(req: Request, res: Response, next: NextFunction) {
     const { postId } = req.params;
+    const response = new ResponseHandler(res);
 
     const parseResult = commentSchema.safeParse(req.body);
 
@@ -66,56 +51,38 @@ export class CommentsController {
       const errorMessage = parseResult.error.errors
         .map((e) => e.message)
         .join(", ");
-      return next(
-        res.status(400).json({
-          statusCode: 400,
-          message: errorMessage,
-        })
-      );
+      return next(new Error(400, errorMessage));
     }
 
     const { username, content } = parseResult.data;
 
     try {
       const commentRef = doc(collection(CommentsController.db, CommentsController.collectionPath));
-      await setDoc(
-        commentRef,
-        {
-          username,
-          content,
-          created_at: serverTimestamp(),
-          updated_at: serverTimestamp(),
-          upvotes: 0,
-          downvotes: 0,
-        }
-      );
+      await setDoc(commentRef, {
+        username,
+        content,
+        created_at: serverTimestamp(),
+        updated_at: serverTimestamp(),
+        upvotes: 0,
+        downvotes: 0,
+      });
 
-      const postRef = doc(
-        CommentsController.db,
-        CommentsController.postCollectionPath,
-        postId
-      );
+      const postRef = doc(CommentsController.db, CommentsController.postCollectionPath, postId);
       await updateDoc(postRef, {
         comments: arrayUnion(commentRef.id),
       });
 
-      res.status(201).json({
-        statusCode: 201,
-        message: "Comment created successfully",
-        data: { id: commentRef.id },
-      });
-    } catch (error) {
-      next(
-        res.status(500).json({
-          statusCode: 500,
-          message: "Failed to create comment",
-        })
+      response.send(
+        new SuccessfullyCreated({ id: commentRef.id }, "Comment created successfully")
       );
+    } catch (error) {
+      next(new Error(500, "Failed to create comment", error));
     }
   }
 
   static async updateComment(req: Request, res: Response, next: NextFunction) {
     const { commentId } = req.params;
+    const response = new ResponseHandler(res);
 
     const parseResult = partialCommentSchema.safeParse(req.body);
 
@@ -123,114 +90,65 @@ export class CommentsController {
       const errorMessage = parseResult.error.errors
         .map((e) => e.message)
         .join(", ");
-      return next(
-        res.status(400).json({
-          statusCode: 400,
-          message: errorMessage,
-        })
+      return next(new Error(400, errorMessage)
       );
     }
 
     const updatedData = parseResult.data;
 
     if (Object.keys(updatedData).length === 0) {
-      return next(
-        res.status(400).json({
-          statusCode: 400,
-          message: "No valid fields to update",
-        })
+      return next(new Error(400, "No valid fields to update")
       );
     }
 
     try {
-      const commentRef = doc(
-        CommentsController.db,
-        CommentsController.collectionPath,
-        commentId
-      );
+      const commentRef = doc(CommentsController.db, CommentsController.collectionPath, commentId);
       const dataToUpdate = {
         ...updatedData,
         updated_at: serverTimestamp(),
       };
       await updateDoc(commentRef, dataToUpdate);
-      res.status(200).json({
-        statusCode: 200,
-        message: "Comment updated successfully",
-      });
+      response.send(new Success(undefined, "Comment updated succeffully"));
     } catch (error) {
-      next(
-        res.status(500).json({
-          statusCode: 500,
-          message: "Failed to update comment",
-        })
-      );
+      next(new Error(500, "Failed to update comment", error));
     }
   }
 
   static async deleteComment(req: Request, res: Response, next: NextFunction) {
     const { commentId } = req.params;
+    const response = new ResponseHandler(res);
 
     try {
-      const commentRef = doc(
-        CommentsController.db,
-        CommentsController.collectionPath,
-        commentId
-      );
+      const commentRef = doc(CommentsController.db, CommentsController.collectionPath, commentId);
       await deleteDoc(commentRef);
 
-      res.status(200).json({
-        statusCode: 200,
-        message: "Comment deleted successfully",
-      });
+      response.send(new Success(undefined, "Comment deleted successfully"));
     } catch (error) {
-      next(
-        res.status(500).json({
-          statusCode: 500,
-          message: "Failed to delete comment",
-        })
-      );
+      next(new Error(500, "Failed to delete comment", error));
     }
   }
 
   static async upvoteComment(req: Request, res: Response, next: NextFunction) {
     const { commentId } = req.params;
     const { username } = req.body;
+    const response = new ResponseHandler(res);
 
     if (!username) {
-      return next(
-        res.status(400).json({
-          statusCode: 400,
-          message: "Username is required",
-        })
-      );
+      return next(new Error(400, "Username is required"));
     }
 
     try {
-      const commentRef = doc(
-        CommentsController.db,
-        CommentsController.collectionPath,
-        commentId
-      );
+      const commentRef = doc(CommentsController.db, CommentsController.collectionPath, commentId);
       const commentSnapshot = await getDoc(commentRef);
 
       if (!commentSnapshot.exists()) {
-        return next(
-          res.status(404).json({
-            statusCode: 404,
-            message: "Comment not found",
-          })
-        );
+        return next(new NotFoundError("Comment not found"));
       }
 
       const commentData = commentSnapshot.data() as IComment;
 
       if (commentData.upvoters && commentData.upvoters[username]) {
-        return next(
-          res.status(409).json({
-            statusCode: 409,
-            message: "User has already upvoted this comment.",
-          })
-        );
+        return next(new Error(409, "User has already upvoted this comment"));
       }
       if (commentData.downvoters && commentData.downvoters[username]) {
         await updateDoc(commentRef, {
@@ -244,59 +162,33 @@ export class CommentsController {
         [`upvoters.${username}`]: true,
       });
 
-      res.status(200).json({
-        statusCode: 200,
-        message: "Comment upvoted successfully",
-      });
+      response.send(new Success(undefined, "Comment upvoted successfully"));
     } catch (error) {
-      next(
-        res.status(500).json({
-          statusCode: 500,
-          message: "Failed to upvote comment",
-        })
-      );
+      next(new Error(500, "Failed to upvote comment", error));
     }
   }
 
   static async removeUpvote(req: Request, res: Response, next: NextFunction) {
     const { commentId } = req.params;
     const { username } = req.body;
+    const response = new ResponseHandler(res);
 
     if (!username) {
-      return next(
-        res.status(400).json({
-          statusCode: 400,
-          message: "Username is required",
-        })
-      );
+      return next(new Error(400, "Username is required"));
     }
 
     try {
-      const commentRef = doc(
-        CommentsController.db,
-        CommentsController.collectionPath,
-        commentId
-      );
+      const commentRef = doc(CommentsController.db, CommentsController.collectionPath, commentId);
       const commentSnapshot = await getDoc(commentRef);
 
       if (!commentSnapshot.exists()) {
-        return next(
-          res.status(404).json({
-            statusCode: 404,
-            message: "Comment not found",
-          })
-        );
+        return next(new NotFoundError("Comment not found"));
       }
 
       const commentData = commentSnapshot.data() as IComment;
 
       if (!commentData.upvoters || !commentData.upvoters[username]) {
-        return next(
-          res.status(400).json({
-            statusCode: 400,
-            message: "User has not upvoted this comment",
-          })
-        );
+        return next(new Error(400, "User has not upvoted this comment"));
       }
 
       await updateDoc(commentRef, {
@@ -304,52 +196,28 @@ export class CommentsController {
         [`upvoters.${username}`]: deleteField(),
       });
 
-      res.status(200).json({
-        statusCode: 200,
-        message: "Upvote removed successfully",
-      });
+      response.send(new Success(undefined, "Upvote removed successfully"));
     } catch (error) {
-      next(
-        res.status(500).json({
-          statusCode: 500,
-          message: "Failed to remove upvote",
-        })
-      );
+      next(new Error(500, "Failed to remove upvote", error));
     }
   }
 
-  static async downvoteComment(
-    req: Request,
-    res: Response,
-    next: NextFunction
-  ) {
+  static async downvoteComment(req: Request, res: Response, next: NextFunction) {
     const { commentId } = req.params;
     const { username } = req.body;
+    const response = new ResponseHandler(res);
 
     if (!username) {
-      return next(
-        res.status(400).json({
-          statusCode: 400,
-          message: "Username is required",
-        })
+      return next(new Error(400, "Username is required")
       );
     }
 
     try {
-      const commentRef = doc(
-        CommentsController.db,
-        CommentsController.collectionPath,
-        commentId
-      );
+      const commentRef = doc(CommentsController.db, CommentsController.collectionPath, commentId);
       const commentSnapshot = await getDoc(commentRef);
 
       if (!commentSnapshot.exists()) {
-        return next(
-          res.status(404).json({
-            statusCode: 404,
-            message: "Comment not found",
-          })
-        );
+        return next(new NotFoundError("Comment not found"));
       }
 
       const commentData = commentSnapshot.data() as IComment;
@@ -362,10 +230,9 @@ export class CommentsController {
       }
 
       if (commentData.downvoters && commentData.downvoters[username]) {
-        return res.status(200).json({
-          statusCode: 200,
-          message: "User has already downvoted this comment.",
-        });
+        return next(
+          new Success(undefined, "user has already downvoted this comment")
+        );
       }
 
       await updateDoc(commentRef, {
@@ -373,58 +240,34 @@ export class CommentsController {
         [`downvoters.${username}`]: true,
       });
 
-      res.status(200).json({
-        statusCode: 200,
-        message: "Comment downvoted successfully",
-      });
+      response.send(new Success(undefined, "Comment downvoted successfully"));
     } catch (error) {
-      next(
-        res.status(500).json({
-          statusCode: 500,
-          message: "Failed to downvote comment",
-        })
-      );
+      next(new Error(500, "Failed to downvote comment", error));
     }
   }
 
   static async removeDownvote(req: Request, res: Response, next: NextFunction) {
     const { commentId } = req.params;
     const { username } = req.body;
+    const response = new ResponseHandler(res);
 
     if (!username) {
-      return next(
-        res.status(400).json({
-          statusCode: 400,
-          message: "Username is required",
-        })
-      );
+      return next(new Error(400, "Username is required") );
     }
 
     try {
-      const commentRef = doc(
-        CommentsController.db,
-        CommentsController.collectionPath,
-        commentId
-      );
+      const commentRef = doc(CommentsController.db, CommentsController.collectionPath, commentId);
       const commentSnapshot = await getDoc(commentRef);
 
       if (!commentSnapshot.exists()) {
-        return next(
-          res.status(404).json({
-            statusCode: 404,
-            message: "Comment not found",
-          })
+        return next(new NotFoundError("Comment not found")
         );
       }
 
       const commentData = commentSnapshot.data() as IComment;
 
       if (!commentData.downvoters || !commentData.downvoters[username]) {
-        return next(
-          res.status(400).json({
-            statusCode: 400,
-            message: "User has not downvoted this comment",
-          })
+        return next(new Error(400, "User has not downvoted this comment")
         );
       }
 
@@ -433,15 +276,9 @@ export class CommentsController {
         [`downvoters.${username}`]: deleteField(),
       });
 
-      res.status(200).json({
-        statusCode: 200,
-        message: "Downvote removed successfully",
-      });
+      response.send(new Success(undefined, "Downvote removed successfully"))
     } catch (error) {
-      next({
-        statusCode: 500,
-        message: "Failed to remove downvote",
-      });
+      next(new Error(500, "Failed to downvote comment", error));
     }
   }
 }

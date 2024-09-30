@@ -59,7 +59,8 @@ export class PostsController {
           const postData = postDoc.data();
           const postId = postDoc.id;
 
-          const commentIds = postData.comments || [];
+          const { upvoters, downvoters, comments: commentIds = [], ...allPostData } = postData;
+
           let comments: IComment[] = [];
 
           if (commentIds.length > 0) {
@@ -78,7 +79,7 @@ export class PostsController {
 
           return {
             id: postId,
-            ...postData,
+            ...allPostData,
             comments,
           };
         })
@@ -103,7 +104,7 @@ export class PostsController {
       }
 
       const postData = postsSnapshot.data();
-      const commentIds = postData.comments || [];
+      const { upvoters, downvoters, comments: commentIds = [], ...allPostData } = postData;
       let comments: IComment[] = [];
 
       if (commentIds.length > 0) {
@@ -118,7 +119,7 @@ export class PostsController {
       }
 
       response.send(new Success({
-        ...postData,
+        ...allPostData,
         id: postsSnapshot.id,
         comments
       },"Post retreived successfully"));
@@ -149,7 +150,7 @@ export class PostsController {
           const postData = doc.data();
           const postId = doc.id;
 
-          const commentIds = postData.comments || [];
+          const { upvoters, downvoters, comments: commentIds = [], ...allPostData } = postData;
           let comments: IComment[] = [];
 
           if (commentIds.length > 0) {
@@ -165,7 +166,7 @@ export class PostsController {
 
           return {
             id: postId,
-            ...postData,
+            ...allPostData,
             comments,
           };
         })
@@ -425,15 +426,15 @@ export class PostsController {
       const postsSnapshot = await getDocs(collection(PostsController.db, PostsController.collectionPath));
   
       const votedPosts = postsSnapshot.docs
-        .map((doc) => ({
+      .map((doc) => {
+        const postData = doc.data() as IPostData;
+        const { upvoters, downvoters, ...allPostData } = postData;
+
+        return {
           id: doc.id,
-          ...(doc.data() as IPostData),
-        }))
-        .filter((post) => {
-          const upvoters = post.upvoters || {};
-          const downvoters = post.downvoters || {};
-          return upvoters[username] || downvoters[username];
-        });
+          ...allPostData,
+        };
+      });
   
       if (votedPosts.length === 0) {
         return next(new NotFoundError("User has not voted on any posts"));

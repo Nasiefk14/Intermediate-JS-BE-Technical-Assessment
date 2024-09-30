@@ -6,6 +6,6 @@ export interface IPostData {
   updated_at: Date;
   upvotes: number;
   downvotes: number;
-  upvoters?: Record<string, boolean>;
-  downvoters?: Record<string, boolean>;
+  upvoters?: { [username: string]: boolean };
+  downvoters?: { [username: string]: boolean };
 }
